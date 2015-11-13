@@ -110,9 +110,10 @@ module.exports = function (opts) {
                     }
 
                     // Get relative file paths and join with search paths to send to vinyl-fs
-                    globs = filepaths
+                    globs = [];
+                    filepaths
                         .filter(isRelativeUrl)
-                        .map(function (filepath) {
+                        .forEach(function (filepath) {
                             var pattern = path.join((searchPaths || _basePath), filepath),
                                 matches = glob.sync(pattern, { nosort: true });
 
@@ -120,10 +121,14 @@ module.exports = function (opts) {
                                 matches.push(pattern);
                             }
                             if (opts.transformPath) {
-                                matches[0] = opts.transformPath(matches[0]);
+                                matches = matches.map(function(match) {
+                                    return opts.transformPath(match);
+                                })
                             }
 
-                            return matches[0];
+                            matches.forEach(function(match) {
+                                globs.push(match);
+                            });
                         });
 
                     src = vfs.src(globs, {
